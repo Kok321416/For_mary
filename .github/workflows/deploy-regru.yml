@@ -8,6 +8,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  # Домен для проверки после деплоя. Опционально: создать секрет SITE_URL в GitHub — тогда он подставится вместо этого значения.
+  SITE_URL: ${{ secrets.SITE_URL || 'https://egorovamariyapsy.ru' }}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -30,3 +34,36 @@ jobs:
             .venv/
             **/.gitignore
             *.md
+
+      # Диагностика: что реально отдаёт сервер по домену (помогает понять, почему "сайт не открывается")
+      - name: Diagnostics — check site response
+        if: success()
+        run: |
+          echo "=============================================="
+          echo "Проверка ответа сайта после деплоя"
+          echo "URL: ${{ env.SITE_URL }}"
+          echo "=============================================="
+          echo ""
+          echo "--- HTTP-заголовки и код ответа ---"
+          curl -sI -L --connect-timeout 10 --max-time 15 "${{ env.SITE_URL }}" || true
+          echo ""
+          echo "--- Начало тела ответа (первые 1200 символов) ---"
+          BODY=$(curl -sL --connect-timeout 10 --max-time 15 "${{ env.SITE_URL }}" 2>/dev/null || echo "")
+          echo "$BODY" | head -c 1200
+          echo ""
+          echo ""
+          echo "--- Краткая сводка ---"
+          CODE=$(curl -sL -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 15 "${{ env.SITE_URL }}" 2>/dev/null || echo "failed")
+          echo "HTTP код: $CODE"
+          if [ "$CODE" = "200" ]; then
+            echo "Ожидаемо: страница отдаётся (200)."
+          elif [ "$CODE" = "301" ] || [ "$CODE" = "302" ]; then
+            echo "Редирект: проверьте полный вывод заголовков выше (Location)."
+          elif [ "$CODE" = "404" ] || [ "$CODE" = "403" ]; then
+            echo "Сервер отдаёт $CODE: домен, возможно, не привязан к папке с файлами в панели reg.ru (Сайты → корневая директория)."
+          elif [ "$CODE" = "failed" ]; then
+            echo "Не удалось подключиться: проверьте DNS или доступность хоста."
+          else
+            echo "Код $CODE — проверьте заголовки и тело ответа выше."
+          fi
+          echo "=============================================="
