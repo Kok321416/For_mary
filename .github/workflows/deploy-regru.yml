@@ -1,4 +1,4 @@
-# Деплой статического сайта на хостинг reg.ru по FTP при пуше в main
+# Деплой на хостинг reg.ru по SFTP при пуше в main (FTP на reg.ru часто даёт 530 — используем SFTP)
 name: Deploy to reg.ru
 
 on:
@@ -13,19 +13,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy to FTP (reg.ru)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Deploy via SFTP (reg.ru)
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./
-          server-dir: ${{ secrets.FTP_REMOTE_PATH }}
-          exclude: |
-            .git/
-            .github/
-            .idea/
-            .venv/
-            **/.gitignore
-            DEPLOY.md
-            README.md
+          port: 22
+          remote_path: ${{ secrets.FTP_REMOTE_PATH }}
+          local_path: './'
+          sftp_only: true
+          delete_remote_files: false
+          rsyncArgs: '--exclude=.git --exclude=.github --exclude=.idea --exclude=.venv --exclude=*.md'
+          sftpArgs: '-o ConnectTimeout=10'
