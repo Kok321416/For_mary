@@ -1,0 +1,23 @@
+# Деплой на Ubuntu-сервер по SSH при пуше в main
+name: Deploy to Ubuntu
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH (rsync)
+        uses: easingthemes/ssh-deploy@v4
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          TARGET: ${{ secrets.REMOTE_PATH }}
+          ARGS: "-avz --delete --exclude=.git --exclude=.github --exclude=.idea --exclude=.venv --exclude=*.md"
