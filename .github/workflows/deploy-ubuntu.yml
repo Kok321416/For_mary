@@ -1,9 +1,7 @@
-# Деплой на Ubuntu-сервер по SSH при пуше в main
+# Деплой на свой Ubuntu-сервер по SSH (только ручной запуск; для reg.ru используйте Deploy to reg.ru)
 name: Deploy to Ubuntu
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
