@@ -1,4 +1,6 @@
-# Деплой на хостинг reg.ru по SFTP при пуше в main (FTP на reg.ru часто даёт 530 — используем SFTP)
+# Деплой на хостинг reg.ru по FTP при пуше в main
+# Если "Could not resolve hostname" — в секрет FTP_HOST укажите IP сервера (панель reg.ru → Доступы / информация о сервере)
+# Если "530 Login incorrect" — проверьте пароль в reg.ru (Доступы), при необходимости сбросьте пароль FTP
 name: Deploy to reg.ru
 
 on:
@@ -13,16 +15,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy via SFTP (reg.ru)
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+      - name: Deploy via FTP (reg.ru)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
-          port: 22
-          remote_path: ${{ secrets.FTP_REMOTE_PATH }}
-          local_path: './'
-          sftp_only: true
-          delete_remote_files: false
-          rsyncArgs: '--exclude=.git --exclude=.github --exclude=.idea --exclude=.venv --exclude=*.md'
-          sftpArgs: '-o ConnectTimeout=10'
+          local-dir: ./
+          server-dir: ${{ secrets.FTP_REMOTE_PATH }}
+          exclude: |
+            .git/
+            .github/
+            .idea/
+            .venv/
+            **/.gitignore
+            *.md
