@@ -1,0 +1,31 @@
+# Деплой статического сайта на хостинг reg.ru по FTP при пуше в main
+name: Deploy to reg.ru
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to FTP (reg.ru)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: ${{ secrets.FTP_REMOTE_PATH }}
+          exclude: |
+            .git/
+            .github/
+            .idea/
+            .venv/
+            **/.gitignore
+            DEPLOY.md
+            README.md
